@@ -1,5 +1,6 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import ContactForm from './ContactForm/ContactForm';
 import Filter from './Filter/Filter';
 import ContactList from './ContactList/ContactList';
@@ -7,82 +8,84 @@ import styles from './App.module.scss';
 
 import contacstList from './data/contactsList';
 
-class App extends Component {
-  state = {
-    contacts: contacstList,
-    filter: '',
-  };
+const App = () => {
+  const [contacts, setContacts] = useState(() => {
+    const contacts =
+      JSON.parse(localStorage.getItem('my-contacts')) ?? contacstList;
+    return contacts ? contacts : [];
+  });
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
-    const contacts = JSON.parse(localStorage.getItem('contacts'));
-    if (contacts) {
-      this.setState({ contacts });
+  useEffect(() => {
+    localStorage.setItem('my-contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  const isDublicate = (name, number) => {
+    const normalizedName = name.toLowerCase();
+    const normalizedNumber = number.toLowerCase();
+    const result = contacts.find(({ name, number }) => {
+      return (
+        name.toLowerCase() === normalizedName &&
+        number.toLowerCase() === normalizedNumber
+      );
+    });
+    return Boolean(result);
+  };
+  const addContact = ({ name, number }) => {
+    if (isDublicate(name, number)) {
+      Notify.failure(`${name} is already in contacts.`);
+      return false;
     }
-  }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { contacts } = this.state;
-    if (prevState.contacts !== contacts) {
-      localStorage.setItem('contacts', JSON.stringify(contacts));
-    }
-  }
-
-  addContact = data => {
-    const auditName = this.state.contacts.find(
-      e => e.name.toLowerCase() === data.name.toLowerCase()
-    );
-    if (auditName) return alert(auditName.name + ' is already in contacts.');
-
-    data.id = nanoid();
-    this.setState(prevState => ({ contacts: [data, ...prevState.contacts] }));
+    setContacts(prevContacts => {
+      const newContact = {
+        id: nanoid(),
+        name,
+        number,
+      };
+      return [newContact, ...prevContacts];
+    });
+    return true;
   };
 
-  deleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
-  };
-
-  changeFilter = e => {
-    this.setState({ filter: e.currentTarget.value });
-  };
-
-  getVisibleContact = () => {
-    const { filter, contacts } = this.state;
-    const normalizedFilter = filter.toLowerCase();
-
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
+  const deleteContact = id => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== id)
     );
   };
 
-  render() {
-    const { filter } = this.state;
-    const visibleContact = this.getVisibleContact();
-    const isContact = Boolean(visibleContact.length);
+  const changeFilter = ({ target }) => {
+    setFilter(target.value);
+  };
 
-    return (
-      <div className={styles.container}>
-        <div className={styles.containerBcg}>
-          <div className={styles.contactBook}>
-            <h1 className={styles.title}>Phonebook</h1>
-            <ContactForm onSubmit={this.addContact} />
-            <h2 className={styles.subTitle}>Contacts</h2>
-            <Filter value={filter} changeFilter={this.changeFilter} />
-            {isContact && (
-              <ContactList
-                contact={visibleContact}
-                deleteContact={this.deleteContact}
-              />
-            )}
-            {!isContact && (
-              <p className={styles.noContact}>No contact in list</p>
-            )}
-          </div>
+  const getFilterContacts = () => {
+    if (!filter) {
+      return contacts;
+    }
+  };
+
+  const visibleContact = getFilterContacts();
+  const isContact = Boolean(visibleContact);
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.containerBcg}>
+        <div className={styles.contactBook}>
+          <h1 className={styles.title}>Phonebook</h1>
+          <ContactForm onSubmit={addContact} />
+          <h2 className={styles.subTitle}>Contacts</h2>
+          <Filter value={filter} changeFilter={changeFilter} />
+          {isContact && (
+            <ContactList
+              contact={visibleContact}
+              deleteContact={deleteContact}
+            />
+          )}
+          {!isContact && <p className={styles.noContact}>No contact in list</p>}
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default App;
