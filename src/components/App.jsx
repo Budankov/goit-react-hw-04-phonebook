@@ -21,19 +21,18 @@ const App = () => {
   }, [contacts]);
 
   const isDublicate = (name, number) => {
-    const normalizedName = name.toLowerCase();
-    const normalizedNumber = number.toLowerCase();
+    const normalizedName = name.toLowerCase().trim();
+    const normalizedNumber = number.toString().trim();
     const result = contacts.find(({ name, number }) => {
       return (
-        name.toLowerCase() === normalizedName &&
-        number.toLowerCase() === normalizedNumber
+        name.toLowerCase() === normalizedName || number === normalizedNumber
       );
     });
     return Boolean(result);
   };
   const addContact = ({ name, number }) => {
     if (isDublicate(name, number)) {
-      Notify.failure(`${name} is already in contacts.`);
+      Notify.failure('The contact already exists, please add a new contact');
       return false;
     }
 
