@@ -9,11 +9,10 @@ import styles from './App.module.scss';
 import contacstList from './data/contactsList';
 
 const App = () => {
-  const [contacts, setContacts] = useState(() => {
-    const contacts =
-      JSON.parse(localStorage.getItem('my-contacts')) ?? contacstList;
-    return contacts ? contacts : [];
-  });
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(localStorage.getItem('my-contacts')) ?? contacstList
+  );
+
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
@@ -32,8 +31,9 @@ const App = () => {
   };
   const addContact = ({ name, number }) => {
     if (isDublicate(name, number)) {
-      Notify.failure('The contact already exists, please add a new contact');
-      return false;
+      return Notify.failure(
+        'The contact already exists, please add a new contact'
+      );
     }
 
     setContacts(prevContacts => {
@@ -44,7 +44,6 @@ const App = () => {
       };
       return [newContact, ...prevContacts];
     });
-    return true;
   };
 
   const deleteContact = id => {
