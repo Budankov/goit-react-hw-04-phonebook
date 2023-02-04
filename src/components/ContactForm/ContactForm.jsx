@@ -2,12 +2,12 @@ import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
-import inititalState from './inititalState';
+import initialState from './initialState';
 
 import styles from './ContactForm.module.scss';
 
 const ContactForm = ({ onSubmit }) => {
-  const [state, setState] = useState({ ...inititalState });
+  const [state, setState] = useState({ ...initialState });
   const { name, number } = state;
 
   const handleChange = ({ target }) => {
@@ -20,7 +20,7 @@ const ContactForm = ({ onSubmit }) => {
   const handleSubmit = e => {
     e.preventDefault();
     onSubmit({ name, number });
-    setState({ ...inititalState });
+    setState({ ...initialState });
   };
 
   return (
